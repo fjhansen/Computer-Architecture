@@ -6,6 +6,10 @@ HLT = 0b00000001 #1
 LDI = 0b10000010 #130
 PRN = 0b01000111 #71
 MUL = 0b10100010 #162
+POP = 0b01000110 #70
+PUSH = 0b01000101 #69
+CALL = 0b01010000 #80
+RET = 0b00010001 #17
 
 class CPU:
     """Main CPU class."""
@@ -18,6 +22,10 @@ class CPU:
     
         self.ram = [0] * 256 # We need the max ram
 
+        self.SP = 7
+        
+        self.reg[self.SP] = 0xF4 #244
+
         # setup jumptable
 
         self.jumptable={}
@@ -27,6 +35,19 @@ class CPU:
         self.jumptable[PRN] = self.handle_prn
 
         self.jumptable[MUL] = self.handle_mul
+
+        self.jumptable[PUSH] = self.handle_push # ls8.py examples/stack.ls8
+
+        self.jumptable[POP] = self.handle_pop
+
+        self.jumptable[HLT] = self.handle_HLT
+
+        self.jumptable[CALL] = self.handle_CALL
+
+        self.jumptable[RET] = self.handle_RET
+
+    def __repr__(self):
+        return str(self.jumptable)
         
         
 
@@ -55,6 +76,55 @@ class CPU:
         self.reg[regA] = mul
         self.pc += 3
 
+
+    def handle_push(self):
+        self.reg[self.SP]-=1
+        
+        regA = self.ram[self.pc+1]
+        
+        value = self.reg[regA]
+        
+        stack_reg = self.reg[self.SP] # stack pointer hold address
+        self.ram[stack_reg] = value
+        self.pc +=2
+        
+    def handle_pop(self):
+        if self.reg[self.SP] == 0xF4:
+            
+            #print("Empty!!")
+            
+            return "Empty!!!"
+        regA = self.ram_read(self.pc+1)
+        
+        self.reg[regA] = self.ram[self.reg[self.SP]]
+        
+        self.reg[self.SP]+=1
+        self.pc+=2
+
+
+    # for HLT
+
+    def handle_HLT(self):
+        self.pc +=1
+        self.running = False
+        return self.running
+
+    def handle_CALL(self):
+        # jump to any address with CALL... create address to return to
+        # do this with pop in RET
+        # edit cpu_run handler
+        # ADD JMP
+        pass
+
+        
+        
+
+    def handle_RET(self):
+        # deal with subroutine
+        # POP from stack and save
+        # set SP +1
+        # set address to jump back
+        pass
         
     # Loading
 
@@ -96,6 +166,11 @@ class CPU:
 
         if op == "ADD":
             self.reg[regA] += self.reg[regB]
+
+        # for multi
+
+        elif op == "MUL":
+            self.reg[regA] *= self.reg[regB]
         
         else:
             raise Exception("Unsupported ALU operation")
@@ -120,17 +195,39 @@ class CPU:
 
     def run(self):
 
-        command = LDI
-        self.jumptable[command]()
+        self.running = True
+        while self.running:
+            command = self.ram[self.pc]
+            if command in self.jumptable:
+                self.jumptable[command]()
+                #print("\n PC: \n",self.pc)
+                #print(CPU().ram_read(self.pc))
+                #print("\n REG: \n",self.reg)
+                #print("\n RAM: \n",self.ram)
+                
 
-        command = LDI
-        self.jumptable[command]()
+            else:
+                print(f"Error: {command}, Address: {self.pc}")
+                print("JT: \n",self.jumptable)
+                print("PC: \n",self.pc)
+                print("REG-E: \n",self.reg)
+                print("RAM-E: \n",self.ram)
+                
+                sys.exit(1)
 
-        command = MUL
-        self.jumptable[command]()
+##        command = LDI
+##        self.jumptable[command]()
+##
+##        command = LDI
+##        self.jumptable[command]()
+##
+##        command = MUL
+##        self.jumptable[command]()
+##
+##        command = PRN
+##        self.jumptable[command]()
 
-        command = PRN
-        self.jumptable[command]()
+        
         
 ##        """Run the CPU."""
 ##        HLT = 0b00000001 #1
