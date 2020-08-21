@@ -9,14 +9,5 @@ cpu = CPU()
 
 cpu.load()
 cpu.run()
+#cpu.trace()
 
-
-
-##
-##import sys
-##from cpu import *
-##program = sys.argv[1]
-##cpu = CPU()
-##
-##cpu.load(program)
-##cpu.run()
