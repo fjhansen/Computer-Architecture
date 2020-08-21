@@ -1,0 +1,13 @@
+1 # PRINT_FRAN
+4 # SAVE 65 IN R2
+65
+2
+4 # SAVE 20 IN R3
+20
+3
+6 # R2 += R3
+2
+3
+5 # PRINT R2 ("85")
+2
+2 # HALT
